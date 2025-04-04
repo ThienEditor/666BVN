@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tài Xỉu - 666Bet VN</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background-image: url('https://images.unsplash.com/photo-1610826937004-4a8c0fc2e6cb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            margin: 0;
+        }
+        #rerollButton {
+            background-color: #ffffff; /* Màu trắng */
+            color: #333333; /* Chữ trắng đậm (gần đen) */
+            border: none; /* Xóa viền */
+            display: none; /* Ẩn mặc định */
+            padding: 8px 16px;
+            font-size: 14px;
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+        }
+        #rerollButton:hover {
+            background-color: #e6e6e6; /* Màu xám nhạt khi hover */
+        }
+        .bet-group, .multiplier-group {
+            margin: 20px 0;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .selected {
+            background-color: #2196F3;
+        }
+        #rollButton {
+            background-color: #f44336;
+            padding: 15px 30px;
+            font-size: 18px;
+        }
+        #rollButton:hover {
+            background-color: #d32f2f;
+        }
+        #diceResult {
+            margin: 20px 0;
+        }
+        #diceResult img {
+            width: 50px;
+            margin: 5px;
+        }
+        .spinning {
+            animation: spin 0.1s infinite linear;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        #gameResult {
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button id="rerollButton">Quay lại</button>
+            <h1>Tài Xỉu - 666Bet VN</h1>
+        </div>
+        
+        <div class="bet-group">
+            <h3>Chọn mức cược:</h3>
+            <button class="bet" data-amount="1000">1000</button>
+            <button class="bet" data-amount="2000">2000</button>
+            <button class="bet" data-amount="5000">5000</button>
+            <button class="bet" data-amount="10000">10000</button>
+            <button class="bet" data-amount="20000">20000</button>
+        </div>
+
+        <div class="multiplier-group">
+            <h3>Chọn hệ số nhân:</h3>
+            <button class="multiplier" data-multi="1">x1</button>
+            <button class="multiplier" data-multi="2">x2</button>
+            <button class="multiplier" data-multi="3">x3</button>
+            <button class="multiplier" data-multi="4">x4</button>
+            <button class="multiplier" data-multi="5">x5</button>
+        </div>
+
+        <button id="rollButton">Quay</button>
+
+        <div id="diceResult"></div>
+        <div id="gameResult"></div>
+    </div>
+
+    <script>
+        let selectedBet = 0;
+        let selectedMultiplier = 1; // Mặc định là x1
+
+        // Xử lý nút mức cược
+        document.querySelectorAll('.bet').forEach(button => {
+            button.addEventListener('click', function() {
+                document.querySelectorAll('.bet').forEach(btn => btn.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedBet = parseInt(this.dataset.amount);
+            });
+        });
+
+        // Xử lý nút hệ số nhân
+        document.querySelectorAll('.multiplier').forEach(button => {
+            button.addEventListener('click', function() {
+                document.querySelectorAll('.multiplier').forEach(btn => btn.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedMultiplier = parseInt(this.dataset.multi);
+            });
+        });
+
+        // Xử lý nút Quay
+        document.getElementById('rollButton').addEventListener('click', function() {
+            if (!selectedBet || !selectedMultiplier) {
+                alert('Vui lòng chọn mức cược và hệ số nhân trước khi quay!');
+                return;
+            }
+
+            const diceResult = document.getElementById('diceResult');
+            const gameResult = document.getElementById('gameResult');
+            const rollButton = this;
+            const rerollButton = document.getElementById('rerollButton');
+
+            // Vô hiệu hóa nút Quay và ẩn nút Quay lại
+            rollButton.disabled = true;
+            rerollButton.style.display = 'none';
+
+            // Hiển thị xúc xắc đang quay
+            diceResult.innerHTML = `
+                <img class="spinning" src="https://www.random.org/dice/dice1.png" alt="Dice">
+                <img class="spinning" src="https://www.random.org/dice/dice2.png" alt="Dice">
+                <img class="spinning" src="https://www.random.org/dice/dice3.png" alt="Dice">
+            `;
+            gameResult.textContent = 'Đang quay...';
+
+            // Tạo kết quả ngẫu nhiên cho 3 xúc xắc
+            const dice1 = Math.floor(Math.random() * 6) + 1;
+            const dice2 = Math.floor(Math.random() * 6) + 1;
+            const dice3 = Math.floor(Math.random() * 6) + 1;
+            const total = dice1 + dice2 + dice3;
+
+            // Dừng quay và hiển thị kết quả sau 1 giây
+            setTimeout(() => {
+                diceResult.innerHTML = `
+                    <img src="https://www.random.org/dice/dice${dice1}.png" alt="Dice ${dice1}">
+                    <img src="https://www.random.org/dice/dice${dice2}.png" alt="Dice ${dice2}">
+                    <img src="https://www.random.org/dice/dice${dice3}.png" alt="Dice ${dice3}">
+                `;
+
+                // Tính tiền thắng dựa trên hệ số nhân
+                const winAmount = selectedBet * selectedMultiplier;
+                if (total >= 11 && total <= 18) {
+                    gameResult.textContent = `Tài (${total}) - Thắng ${winAmount.toLocaleString()} VNĐ!`;
+                    gameResult.style.color = 'green';
+                    rerollButton.style.display = 'inline-block'; // Hiện nút Quay lại khi thắng
+                } else {
+                    gameResult.textContent = `Xỉu (${total}) - Thua ${selectedBet.toLocaleString()} VNĐ!`;
+                    gameResult.style.color = 'red';
+                }
+
+                // Kích hoạt lại nút Quay
+                rollButton.disabled = false;
+            }, 1000);
+        });
+
+        // Xử lý nút Quay lại (buộc thua)
+        document.getElementById('rerollButton').addEventListener('click', function() {
+            const diceResult = document.getElementById('diceResult');
+            const gameResult = document.getElementById('gameResult');
+            const rollButton = document.getElementById('rollButton');
+            const rerollButton = this;
+
+            // Vô hiệu hóa cả hai nút trong khi quay
+            rollButton.disabled = true;
+            rerollButton.disabled = true;
+
+            // Hiển thị xúc xắc đang quay
+            diceResult.innerHTML = `
+                <img class="spinning" src="https://www.random.org/dice/dice1.png" alt="Dice">
+                <img class="spinning" src="https://www.random.org/dice/dice2.png" alt="Dice">
+                <img class="spinning" src="https://www.random.org/dice/dice3.png" alt="Dice">
+            `;
+            gameResult.textContent = 'Đang quay lại...';
+
+            // Buộc kết quả thành Xỉu (tổng từ 3-10)
+            let dice1, dice2, dice3, total;
+            do {
+                dice1 = Math.floor(Math.random() * 6) + 1;
+                dice2 = Math.floor(Math.random() * 6) + 1;
+                dice3 = Math.floor(Math.random() * 6) + 1;
+                total = dice1 + dice2 + dice3;
+            } while (total > 10); // Lặp lại cho đến khi tổng <= 10 (Xỉu)
+
+            // Dừng quay và hiển thị kết quả thua
+            setTimeout(() => {
+                diceResult.innerHTML = `
+                    <img src="https://www.random.org/dice/dice${dice1}.png" alt="Dice ${dice1}">
+                    <img src="https://www.random.org/dice/dice${dice2}.png" alt="Dice ${dice2}">
+                    <img src="https://www.random.org/dice/dice${dice3}.png" alt="Dice ${dice3}">
+                `;
+                gameResult.textContent = `Xỉu (${total}) - Thua ${selectedBet.toLocaleString()} VNĐ!`;
+                gameResult.style.color = 'red';
+
+                // Ẩn nút Quay lại và kích hoạt nút Quay
+                rerollButton.style.display = 'none';
+                rollButton.disabled = false;
+                rerollButton.disabled = false;
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
