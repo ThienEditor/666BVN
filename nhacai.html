@@ -50,7 +50,7 @@
         #rerollButton:hover {
             background-color: #e6e6e6;
         }
-        .bet-group, .multiplier-group {
+        .bet-group, .multiplier-group, .choice-group {
             margin: 20px 0;
         }
         button {
@@ -129,6 +129,12 @@
             <button class="multiplier" data-multi="5">x5</button>
         </div>
 
+        <div class="choice-group">
+            <h3>Chọn Tài hoặc Xỉu:</h3>
+            <button class="choice" data-choice="tai">Tài</button>
+            <button class="choice" data-choice="xiu">Xỉu</button>
+        </div>
+
         <button id="rollButton">Quay</button>
 
         <div id="diceResult"></div>
@@ -138,7 +144,8 @@
     <script>
         let selectedBet = 0;
         let selectedMultiplier = 1; // Mặc định là x1
-        let balance = 100000; // Số dư ban đầu: 100,000 VNĐ
+        let balance = 10000000; // Số dư ban đầu: 100,000 VNĐ
+        let selectedChoice = null; // Lựa chọn Tài hoặc Xỉu
 
         // Cập nhật hiển thị số dư
         function updateBalance() {
@@ -163,10 +170,19 @@
             });
         });
 
+        // Xử lý nút chọn Tài/Xỉu
+        document.querySelectorAll('.choice').forEach(button => {
+            button.addEventListener('click', function() {
+                document.querySelectorAll('.choice').forEach(btn => btn.classList.remove('selected'));
+                this.classList.add('selected');
+                selectedChoice = this.dataset.choice; // "tai" hoặc "xiu"
+            });
+        });
+
         // Xử lý nút Quay
         document.getElementById('rollButton').addEventListener('click', function() {
-            if (!selectedBet || !selectedMultiplier) {
-                alert('Vui lòng chọn mức cược và hệ số nhân trước khi quay!');
+            if (!selectedBet || !selectedMultiplier || !selectedChoice) {
+                alert('Vui lòng chọn mức cược, hệ số nhân và Tài/Xỉu trước khi quay!');
                 return;
             }
             const betAmount = selectedBet * selectedMultiplier; // Tổng tiền cược theo hệ số nhân
@@ -207,16 +223,18 @@
                 `;
 
                 // Tính tiền thắng/thua dựa trên hệ số nhân
-                const winAmount = selectedBet * selectedMultiplier;
-                const loseAmount = selectedBet * selectedMultiplier; // Thua cũng nhân với hệ số
-                if (total >= 11 && total <= 18) {
-                    balance += winAmount; // Cộng tiền khi thắng
-                    gameResult.textContent = `Tài (${total}) - Thắng ${winAmount.toLocaleString()} VNĐ!`;
+                const amount = selectedBet * selectedMultiplier;
+                const isTai = total >= 11 && total <= 18;
+                const playerWins = (selectedChoice === 'tai' && isTai) || (selectedChoice === 'xiu' && !isTai);
+
+                if (playerWins) {
+                    balance += amount; // Cộng tiền khi thắng
+                    gameResult.textContent = `${isTai ? 'Tài' : 'Xỉu'} (${total}) - Thắng ${amount.toLocaleString()} VNĐ!`;
                     gameResult.style.color = 'green';
                     rerollButton.style.display = 'inline-block'; // Hiện nút Quay lại khi thắng
                 } else {
-                    balance -= loseAmount; // Trừ tiền khi thua (theo hệ số nhân)
-                    gameResult.textContent = `Xỉu (${total}) - Thua ${loseAmount.toLocaleString()} VNĐ!`;
+                    balance -= amount; // Trừ tiền khi thua
+                    gameResult.textContent = `${isTai ? 'Tài' : 'Xỉu'} (${total}) - Thua ${amount.toLocaleString()} VNĐ!`;
                     gameResult.style.color = 'red';
                 }
 
@@ -247,14 +265,14 @@
             `;
             gameResult.textContent = 'Đang quay lại...';
 
-            // Buộc kết quả thành Xỉu (tổng từ 3-10)
+            // Buộc kết quả ngược với lựa chọn của người chơi
             let dice1, dice2, dice3, total;
             do {
                 dice1 = Math.floor(Math.random() * 6) + 1;
                 dice2 = Math.floor(Math.random() * 6) + 1;
                 dice3 = Math.floor(Math.random() * 6) + 1;
                 total = dice1 + dice2 + dice3;
-            } while (total > 10); // Lặp lại cho đến khi tổng <= 10 (Xỉu)
+            } while ((selectedChoice === 'tai' && total >= 11) || (selectedChoice === 'xiu' && total <= 10));
 
             // Dừng quay và hiển thị kết quả thua
             setTimeout(() => {
@@ -263,9 +281,9 @@
                     <img src="https://www.random.org/dice/dice${dice2}.png" alt="Dice ${dice2}">
                     <img src="https://www.random.org/dice/dice${dice3}.png" alt="Dice ${dice3}">
                 `;
-                const loseAmount = selectedBet * selectedMultiplier; // Thua cũng nhân với hệ số
+                const loseAmount = selectedBet * selectedMultiplier;
                 balance -= loseAmount; // Trừ tiền khi thua
-                gameResult.textContent = `Xỉu (${total}) - Thua ${loseAmount.toLocaleString()} VNĐ!`;
+                gameResult.textContent = `${total >= 11 ? 'Tài' : 'Xỉu'} (${total}) - Thua ${loseAmount.toLocaleString()} VNĐ!`;
                 gameResult.style.color = 'red';
 
                 // Cập nhật số dư
