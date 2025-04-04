@@ -35,10 +35,10 @@
             margin: 0;
         }
         #rerollButton {
-            background-color: #ffffff; /* Màu trắng */
-            color: #333333; /* Chữ trắng đậm (gần đen) */
-            border: none; /* Xóa viền */
-            display: none; /* Ẩn mặc định */
+            background-color: #ffffff;
+            color: #333333;
+            border: none;
+            display: none;
             padding: 8px 16px;
             font-size: 14px;
             position: absolute;
@@ -48,7 +48,7 @@
             cursor: pointer;
         }
         #rerollButton:hover {
-            background-color: #e6e6e6; /* Màu xám nhạt khi hover */
+            background-color: #e6e6e6;
         }
         .bet-group, .multiplier-group {
             margin: 20px 0;
@@ -95,6 +95,11 @@
             font-weight: bold;
             margin-top: 20px;
         }
+        #balance {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #333;
+        }
     </style>
 </head>
 <body>
@@ -104,6 +109,8 @@
             <h1>Tài Xỉu - 666Bet VN</h1>
         </div>
         
+        <div id="balance">Số dư: 100,000 VNĐ</div>
+
         <div class="bet-group">
             <h3>Chọn mức cược:</h3>
             <button class="bet" data-amount="1000">1000</button>
@@ -131,6 +138,12 @@
     <script>
         let selectedBet = 0;
         let selectedMultiplier = 1; // Mặc định là x1
+        let balance = 100000; // Số dư ban đầu: 100,000 VNĐ
+
+        // Cập nhật hiển thị số dư
+        function updateBalance() {
+            document.getElementById('balance').textContent = `Số dư: ${balance.toLocaleString()} VNĐ`;
+        }
 
         // Xử lý nút mức cược
         document.querySelectorAll('.bet').forEach(button => {
@@ -154,6 +167,11 @@
         document.getElementById('rollButton').addEventListener('click', function() {
             if (!selectedBet || !selectedMultiplier) {
                 alert('Vui lòng chọn mức cược và hệ số nhân trước khi quay!');
+                return;
+            }
+            const betAmount = selectedBet * selectedMultiplier; // Tổng tiền cược theo hệ số nhân
+            if (betAmount > balance) {
+                alert('Số dư không đủ để đặt cược!');
                 return;
             }
 
@@ -188,16 +206,22 @@
                     <img src="https://www.random.org/dice/dice${dice3}.png" alt="Dice ${dice3}">
                 `;
 
-                // Tính tiền thắng dựa trên hệ số nhân
+                // Tính tiền thắng/thua dựa trên hệ số nhân
                 const winAmount = selectedBet * selectedMultiplier;
+                const loseAmount = selectedBet * selectedMultiplier; // Thua cũng nhân với hệ số
                 if (total >= 11 && total <= 18) {
+                    balance += winAmount; // Cộng tiền khi thắng
                     gameResult.textContent = `Tài (${total}) - Thắng ${winAmount.toLocaleString()} VNĐ!`;
                     gameResult.style.color = 'green';
                     rerollButton.style.display = 'inline-block'; // Hiện nút Quay lại khi thắng
                 } else {
-                    gameResult.textContent = `Xỉu (${total}) - Thua ${selectedBet.toLocaleString()} VNĐ!`;
+                    balance -= loseAmount; // Trừ tiền khi thua (theo hệ số nhân)
+                    gameResult.textContent = `Xỉu (${total}) - Thua ${loseAmount.toLocaleString()} VNĐ!`;
                     gameResult.style.color = 'red';
                 }
+
+                // Cập nhật số dư
+                updateBalance();
 
                 // Kích hoạt lại nút Quay
                 rollButton.disabled = false;
@@ -239,8 +263,13 @@
                     <img src="https://www.random.org/dice/dice${dice2}.png" alt="Dice ${dice2}">
                     <img src="https://www.random.org/dice/dice${dice3}.png" alt="Dice ${dice3}">
                 `;
-                gameResult.textContent = `Xỉu (${total}) - Thua ${selectedBet.toLocaleString()} VNĐ!`;
+                const loseAmount = selectedBet * selectedMultiplier; // Thua cũng nhân với hệ số
+                balance -= loseAmount; // Trừ tiền khi thua
+                gameResult.textContent = `Xỉu (${total}) - Thua ${loseAmount.toLocaleString()} VNĐ!`;
                 gameResult.style.color = 'red';
+
+                // Cập nhật số dư
+                updateBalance();
 
                 // Ẩn nút Quay lại và kích hoạt nút Quay
                 rerollButton.style.display = 'none';
@@ -248,6 +277,9 @@
                 rerollButton.disabled = false;
             }, 1000);
         });
+
+        // Khởi tạo hiển thị số dư ban đầu
+        updateBalance();
     </script>
 </body>
 </html>
